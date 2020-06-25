@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Dan_XXXVII_Bojana_Backo
 {
@@ -13,6 +9,8 @@ namespace Dan_XXXVII_Bojana_Backo
         public static string fileRoutes = @"..\..\FileByThread.txt";
         private static int release = 0;
         static EventWaitHandle waitHandle = new AutoResetEvent(false);
+        static CountdownEvent countdown = new CountdownEvent(10);
+        static Barrier barrier = new Barrier(2);
         static int[] times = new int[10];
 
         // A semaphore that simulates a limited resource pool
@@ -35,7 +33,7 @@ namespace Dan_XXXVII_Bojana_Backo
             t3.Join();
 
             Thread.Sleep(25000);
-            
+
             Thread t4 = new Thread(() => SemaphoreRoute());
             t4.Start();
             if (!t3.IsAlive)
@@ -60,10 +58,12 @@ namespace Dan_XXXVII_Bojana_Backo
             release++;
 
             Console.WriteLine("\nTrunk {0} is loaded. Duration: {1} miliseconds", num, time);
+
             if (release > 1)
             {
                 release = 0;
                 _pool.Release(2);
+                barrier.SignalAndWait();
             }
         }
         private static void RouteAssignment(object num)
@@ -103,6 +103,7 @@ namespace Dan_XXXVII_Bojana_Backo
 
                 // Start the thread, passing the number.
                 t.Start(i);
+                countdown.Signal();
             }
         }
 
